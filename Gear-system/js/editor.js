@@ -59,7 +59,7 @@ Zepto(function($){
   transControl.attach(Mesh);
   scene.add(transControl);
 
-
+  // Dat.gui control
   function initGuiControl(){
     let gui = new dat.GUI();
 
