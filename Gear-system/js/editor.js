@@ -5,12 +5,15 @@ Zepto(function($){
   let SELECT;
   let objects = [];
   let canvas = document.getElementById('gear-system');
+  let light;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   let renderer = new THREE.WebGLRenderer({
     canvas: canvas,
     antialias: true
   });
+  renderer.shadowMap.enabled = true; // for shadow & camera helper
+  renderer.shadowMap.soft = true;
   renderer.setClearColor(0xeeeeee);
   let scene = new THREE.Scene();
   let camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 10, 10000);
@@ -19,12 +22,23 @@ Zepto(function($){
   gridHelper.position.set(0,0,0);
   scene.add(gridHelper);
 
-  pointLight = new THREE.PointLight(0xFFFFFF);
-  pointLight.position.x = 10;
-  pointLight.position.y = 50;
-  pointLight.position.z = 130;
+  light = new THREE.SpotLight(0xFFFFFF,1);
+  // light.position.x = 10;
+  // light.position.y = 50;
+  // light.position.z = 130;
+  light.position.set(0,30,30);
 
-  scene.add(pointLight);
+  light.castShadow = true;
+  light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(45,1,10,80))
+  let helper = new THREE.CameraHelper( light.shadow.camera );
+  // light.shadowCameraVisible = true;
+
+  scene.add(light);
+
+  // let gearOption = {
+  //   size: 1,
+
+  // }
 
   let Gear = new GEARS.Gear(0,0,1,17,"rgba(61,142,198,1)","rgba(61,142,198,1)"); 
   Gear.angularSpeed = 36;
@@ -39,12 +53,13 @@ Zepto(function($){
   let material = new THREE.MeshPhongMaterial({
     color: "rgba(61,142,198,1)",
     polygonOffset: true,
-    polygonOffseFactor: 1.0,
     polygonOffsetUnits: 4.0
   });
 
   let Mesh = new THREE.Mesh(geometry, material);
   Mesh.position.set(0,0,0);
+  Mesh.castShadow = true;
+  Mesh.receiveShadow = true;
   objects.push(Mesh);
   scene.add(Mesh);
 
@@ -97,28 +112,35 @@ Zepto(function($){
   function initGuiControl(){
     let gui = new dat.GUI();
 
-    let guiOption = {
-      'Light X': pointLight.position.x,
-      'Light Y': pointLight.position.y,
-      'Light Z': pointLight.position.x
+    let lightOption = {
+      'Light X': light.position.x,
+      'Light Y': light.position.y,
+      'Light Z': light.position.x,
+      'Camera Helper': false
     }
 
+    // light folder
     let lightFolder = gui.addFolder('Light');
-    lightFolder.add(guiOption, 'Light X')
-        .min(-2000).max(2000)
-        .onChange(function (value) {
-            pointLight.position.x = value;
+    lightFolder.add(lightOption, 'Light X')
+        .min(0).max(200)
+        .onChange((value) => {
+            light.position.x = value;
 
         });
-    lightFolder.add(guiOption, 'Light Y')
-        .min(-2000).max(2000)
-        .onChange(function (value) {
-            pointLight.position.y = value;
+    lightFolder.add(lightOption, 'Light Y')
+        .min(0).max(200)
+        .onChange((value) => {
+            light.position.y = value;
         });
-    lightFolder.add(guiOption, 'Light Z')
-        .min(-2000).max(2000)
-        .onChange(function (value) {
-            pointLight.position.z = value;
+    lightFolder.add(lightOption, 'Light Z')
+        .min(0).max(200)
+        .onChange((value) => {
+            light.position.z = value;
+        });
+    lightFolder.add(lightOption, 'Camera Helper')
+        .onChange((value) => {
+          value == true ? scene.add(helper) : scene.remove(helper);
+          value == true ? Gear.angularSpeed = 0 : Gear.angularSpeed = 36;
         });
   }
 
