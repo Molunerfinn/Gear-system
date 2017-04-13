@@ -6,6 +6,14 @@ Zepto(function($){
   let objects = [];
   let canvas = document.getElementById('gear-system');
   let light;
+  let Gear;
+  let material;
+  let geometry;
+  let Mesh;
+  let gearOption = {};
+  let Gears = [];
+  let stopFlag = false;
+
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   let renderer = new THREE.WebGLRenderer({
@@ -18,49 +26,58 @@ Zepto(function($){
   let scene = new THREE.Scene();
   let camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 10, 10000);
   camera.position.set(80,80,80);
-  let gridHelper = new THREE.GridHelper(100,30, 0x0000ff, 0x808080);
+  let gridHelper = new THREE.GridHelper(100,50, 0x0000ff, 0x808080);
   gridHelper.position.set(0,0,0);
   scene.add(gridHelper);
 
   light = new THREE.SpotLight(0xFFFFFF,1);
-  // light.position.x = 10;
-  // light.position.y = 50;
-  // light.position.z = 130;
   light.position.set(0,30,30);
 
   light.castShadow = true;
   light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(45,1,10,80))
   let helper = new THREE.CameraHelper( light.shadow.camera );
-  // light.shadowCameraVisible = true;
 
   scene.add(light);
 
-  // let gearOption = {
-  //   size: 1,
-
-  // }
-
-  let Gear = new GEARS.Gear(0,0,1,17,"rgba(61,142,198,1)","rgba(61,142,198,1)"); 
-  Gear.angularSpeed = 36;
-
-  let extrudeSettings = {
+  gearOption = {
+    teeth: 17,
+    modulus: 4,
+    color: "#3d8ec6",
+    speed: 36,
     steps: 1,
     amount: 2,
+    thinkness: 2,
     bevelEnabled: false
   }
 
-  let geometry = new THREE.ExtrudeGeometry(Gear.getShape(),extrudeSettings);
-  let material = new THREE.MeshPhongMaterial({
-    color: "rgba(61,142,198,1)",
-    polygonOffset: true,
-    polygonOffsetUnits: 4.0
-  });
+  function renderGear(){
+    Gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
+    Gear.angularSpeed = gearOption.speed;
+    geometry = new THREE.ExtrudeGeometry(Gear.getShape(),gearOption);
+    material = new THREE.MeshPhongMaterial({
+      color: gearOption.color,
+      polygonOffset: true,
+      polygonOffsetUnits: 4.0
+    });
+  }
 
-  let Mesh = new THREE.Mesh(geometry, material);
+  renderGear();
+
+
+  Mesh = new THREE.Mesh(geometry, material);
   Mesh.position.set(0,0,0);
   Mesh.castShadow = true;
   Mesh.receiveShadow = true;
   objects.push(Mesh);
+
+  function updateMesh(){
+    scene.remove(Mesh);
+    renderGear();
+    Mesh = new THREE.Mesh(geometry, material);
+    objects[0] = Mesh;
+    scene.add(Mesh);
+  }
+
   scene.add(Mesh);
 
   // Add Frames Display
@@ -141,7 +158,41 @@ Zepto(function($){
         .onChange((value) => {
           value == true ? scene.add(helper) : scene.remove(helper);
           value == true ? Gear.angularSpeed = 0 : Gear.angularSpeed = 36;
+          value == true ? stopFlag = true : stopFlag = false;
         });
+    lightFolder.open();
+    let gearFolder = gui.addFolder('Gear');
+    gearFolder.add(gearOption, 'teeth')
+        .min(10).max(40).step(1)
+        .onChange((value) => {
+          gearOption.teeth = value;
+          updateMesh();
+        });
+    gearFolder.add(gearOption, 'modulus')
+        .min(2).max(10).step(1)
+        .onChange((value) => {
+          gearOption.modulus = value;
+          updateMesh();
+        });
+    gearFolder.add(gearOption, 'thinkness')
+        .min(0.1).max(25).step(0.1)
+        .onChange((value) => {
+          gearOption.amount = value;
+          gearOption.thinkness = value;
+          updateMesh();
+        });
+    gearFolder.add(gearOption, 'speed')
+        .min(0.1).max(96).step(0.1)
+        .onChange((value) => {
+          gearOption.speed = value;
+          updateMesh();
+        });
+    gearFolder.addColor(gearOption, 'color')
+        .onChange((value) => {
+          gearOption.color = value;
+          updateMesh();
+        });
+    gearFolder.open();
   }
 
   initGuiControl();
