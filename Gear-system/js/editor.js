@@ -1,5 +1,9 @@
 Zepto(function($){
 
+  let raycaster;
+  let mouse;
+  let SELECT;
+  let objects = [];
   let canvas = document.getElementById('gear-system');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -41,6 +45,7 @@ Zepto(function($){
 
   let Mesh = new THREE.Mesh(geometry, material);
   Mesh.position.set(0,0,0);
+  objects.push(Mesh);
   scene.add(Mesh);
 
   // Add Frames Display
@@ -56,8 +61,37 @@ Zepto(function($){
 
   let transControl = new THREE.TransformControls(camera, renderer.domElement);
   transControl.addEventListener('change', draw);
-  transControl.attach(Mesh);
-  scene.add(transControl);
+
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Added: click control
+  function onTouchStart(event){
+    event.preventDefault();
+    event.clientX = event.touches[0].clientX;
+    event.clientY = event.touches[0].clientY;
+    onMouseDown(event); 
+  }
+
+  function onMouseDown(event){
+    event.preventDefault();
+    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    let intersects = raycaster.intersectObjects(objects);
+    if(intersects.length > 0){
+      SELECT = intersects[0].object;
+      transControl.attach(Mesh);
+      scene.add(transControl);
+    }else{
+      scene.remove(transControl);
+      transControl.detach(SELECT);
+    }
+  }
+
+  document.addEventListener( 'mousedown', onMouseDown, false );
+  document.addEventListener( 'touchstart', onTouchStart, false );
 
   // Dat.gui control
   function initGuiControl(){
