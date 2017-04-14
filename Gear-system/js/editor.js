@@ -13,6 +13,7 @@ Zepto(function($){
   let gearOption = {};
   let Gears = [];
   let stopFlag = false;
+  let rotation;
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -69,11 +70,22 @@ Zepto(function($){
   Mesh.castShadow = true;
   Mesh.receiveShadow = true;
   objects.push(Mesh);
-
+  rotation = {
+    x: Mesh.rotation.x,
+    y: Mesh.rotation.y,
+    z: Mesh.rotation.z
+  }
   function updateMesh(){
+    rotation = {
+      x: Mesh.rotation.x,
+      y: Mesh.rotation.y,
+      z: Mesh.rotation.z
+    }
+    console.log(rotation)
     scene.remove(Mesh);
     renderGear();
     Mesh = new THREE.Mesh(geometry, material);
+    Mesh.rotation.set(rotation.x,rotation.y,rotation.z);
     objects[0] = Mesh;
     scene.add(Mesh);
   }
@@ -197,6 +209,13 @@ Zepto(function($){
 
   initGuiControl();
 
+  function updateGearParameters(){
+    let l = ['x','y','z'];
+    for(let i in l){
+      $('.position-' + l[i]).text(Mesh.position[l[i]].toFixed(2));
+    }
+  }
+
   // Render whole scene
   function renderCanvas(){
     stats.begin();
@@ -207,7 +226,8 @@ Zepto(function($){
   }
   function draw(){
     Gear.track();
-    Mesh.rotation.z = -Gear.phi;
+    Mesh.rotation.z = rotation.z - Gear.phi;
+    updateGearParameters();
     renderer.render(scene, camera);
   }
   renderCanvas();
