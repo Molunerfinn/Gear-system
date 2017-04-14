@@ -98,9 +98,11 @@ Zepto(function($){
 
   // Add controls
   let controls = new THREE.OrbitControls(camera, renderer.domElement); // renderer.domElement is required
+  console.log(renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 1.0;
   controls.enableZoom = true;
+  controls.addEventListener( 'change', draw );
   controls.addEventListener( 'change', draw );
 
   let transControl = new THREE.TransformControls(camera, renderer.domElement);
@@ -128,14 +130,31 @@ Zepto(function($){
       SELECT = intersects[0].object;
       transControl.attach(Mesh);
       scene.add(transControl);
+      controls.enabled = false;
     }else{
       scene.remove(transControl);
       transControl.detach(SELECT);
+      controls.enabled = true;
     }
   }
 
   document.addEventListener( 'mousedown', onMouseDown, false );
-  document.addEventListener( 'touchstart', onTouchStart, false );
+  renderer.domElement.addEventListener( 'touchstart', onTouchStart, false );
+
+  // Mobile detected
+  function isMobile(){
+    var sUserAgent= navigator.userAgent.toLowerCase(),
+    bIsIpad= sUserAgent.match(/ipad/i) == "ipad",
+    bIsIphoneOs= sUserAgent.match(/iphone os/i) == "iphone os",
+    bIsMidp= sUserAgent.match(/midp/i) == "midp",
+    bIsUc7= sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4",
+    bIsUc= sUserAgent.match(/ucweb/i) == "ucweb",
+    bIsAndroid= sUserAgent.match(/android/i) == "android",
+    bIsCE= sUserAgent.match(/windows ce/i) == "windows ce",
+    bIsWM= sUserAgent.match(/windows mobile/i) == "windows mobile",
+    bIsWebview = sUserAgent.match(/webview/i) == "webview";
+    return (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM);
+  }
 
   // Dat.gui control
   function initGuiControl(){
@@ -172,7 +191,6 @@ Zepto(function($){
           value == true ? Gear.angularSpeed = 0 : Gear.angularSpeed = 36;
           value == true ? stopFlag = true : stopFlag = false;
         });
-    lightFolder.open();
     let gearFolder = gui.addFolder('Gear');
     gearFolder.add(gearOption, 'teeth')
         .min(10).max(40).step(1)
@@ -204,7 +222,12 @@ Zepto(function($){
           gearOption.color = value;
           updateMesh();
         });
-    gearFolder.open();
+    if(!isMobile()){
+      lightFolder.open();
+      gearFolder.open();
+    }else{
+      $('.button').addClass('mobile-button')
+    }
   }
 
   initGuiControl();
@@ -230,5 +253,10 @@ Zepto(function($){
     updateGearParameters();
     renderer.render(scene, camera);
   }
-  renderCanvas();
+  renderCanvas()
+  
+  // Zepto
+  $('.toggle-menu').on('click',function(){
+    $('#function-panel').hasClass('hide') ? $('#function-panel').removeClass('hide').addClass('show') : $('#function-panel').removeClass('show').addClass('hide');
+  });
 })

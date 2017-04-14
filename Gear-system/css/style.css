@@ -21,4 +21,103 @@ body{
   display: inline-block;
 }
 
+#function-panel{
+  width: 133px;
+  height: 250px;
+  background: #ddd;
+  position: absolute;
+  top: 200px;
+  left: 0px;
+  padding: 10px 0px 10px 10px;
+  box-sizing: border-box;
+  border-top: 1px solid #858585;
+  border-bottom: 1px solid #858585;
+  border-right: 1px solid #858585;
+  z-index: 1;
+  overflow: hidden;
+  transition: transform .3s;
+}
+
+#function-panel.hide{
+  transform: translate3d(-120px,0,0);
+}
+
+#function-panel.hide:before{
+  content: '>';
+  position: absolute;
+  top: 115px;
+  right: 1px;
+}
+
+#function-panel.show:before{
+  content: '<';
+  position: absolute;
+  top: 115px;
+  right: 1px;
+}
+
+#function-panel.show{
+  transform: translate3d(0,0,0);
+}
+
+.menu{
+  width: 100px;
+  float: left;
+}
+
+.toggle-menu{
+  width: 10px;
+  float: left;
+  height: 230px;
+  line-height: 230px;
+  position: relative;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.toggle-menu:before{
+  content: '';
+  height: 250px;
+  width: 1px;
+  background: #858585;
+  position: absolute;
+  top: -10px;
+}
+
+.menu-item{
+  margin-bottom: 10px;
+}
+
+.menu-title{
+  font-size: 18px;
+}
+
+.button{
+  display: inline-block;
+  width: 90px;
+  margin: 5px auto;
+  border: 1px solid #000;
+  cursor: pointer;
+  padding: 4px;
+  text-align: center;
+  transition: background .3s, color .3s;
+}
+
+.add-gear:hover,.add-gear:active{
+  background: #000;
+  color: #ddd;
+}
+
+.remove-gear:hover,.remove-gear:active{
+  background: #E63E2C;
+  border-color: #E63E2C;
+  color: #ddd;
+}
+
+.menu .mobile-button:hover{
+  border: 1px solid #000;
+  background: #ddd;
+  color: #000;
+}
+
 
