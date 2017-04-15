@@ -7,13 +7,17 @@ Zepto(function($){
   let canvas = document.getElementById('gear-system');
   let light;
   let Gear;
+  let Gears = [];
+  let Mesh;
+  let Meshes = [];
+  let gearOption = {};
+  let gearOptions = [];
   let material;
   let geometry;
-  let Mesh;
-  let gearOption = {};
-  let Gears = [];
   let stopFlag = false;
   let rotation;
+  let isMobile = false;
+  let markedMesh;
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -48,7 +52,7 @@ Zepto(function($){
     steps: 1,
     amount: 2,
     thinkness: 2,
-    bevelEnabled: false
+    bevelEnabled: false,
   }
 
   function renderGear(){
@@ -64,33 +68,82 @@ Zepto(function($){
 
   renderGear();
 
+  function addGear(){
+    let tempOption = {
+      teeth: 17,
+      modulus: 4,
+      color: "#3d8ec6",
+      speed: 36,
+      steps: 1,
+      amount: 2,
+      thinkness: 2,
+      bevelEnabled: false,
+      uuid: ''
+    }
+    let gear = new GEARS.Gear(0,0,tempOption.modulus / 4, tempOption.teeth,tempOption.color,tempOption.color); 
+    gear.angularSpeed = tempOption.speed;
 
-  Mesh = new THREE.Mesh(geometry, material);
-  Mesh.position.set(0,0,0);
-  Mesh.castShadow = true;
-  Mesh.receiveShadow = true;
-  objects.push(Mesh);
-  rotation = {
-    x: Mesh.rotation.x,
-    y: Mesh.rotation.y,
-    z: Mesh.rotation.z
+    let tempGeometry = new THREE.ExtrudeGeometry(gear.getShape(),tempOption);
+    let tempMaterial = new THREE.MeshPhongMaterial({
+      color: tempOption.color,
+      polygonOffset: true,
+      polygonOffsetUnits: 4.0
+    });
+
+    let mesh = new THREE.Mesh(tempGeometry, tempMaterial);
+    mesh.position.set(0,0,0);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    tempOption.uuid = mesh.uuid;
+    gear.uuid = mesh.uuid;
+    Meshes.push(mesh);
+    Gears.push(gear);
+    gearOptions.push(tempOption);
+    scene.add(mesh);
   }
-  function updateMesh(){
+
+  function removeGear(ms){
+    if(ms != undefined){
+      scene.remove(ms);
+      let uuid = ms.uuid;
+      for(let i in Meshes){
+        if(Meshes[i].uuid == uuid){
+          Meshes.splice(i,1)
+        }
+      }
+      for(let i in Gears){
+        if(Gears[i].uuid == uuid){
+          Gears.splice(i,1)
+        }
+      }
+      for(let i in gearOptions){
+        if(gearOptions[i].uuid == uuid){
+          gearOptions.splice(i,1)
+        }
+      }
+      markedMesh = undefined;
+    }
+  }
+
+  rotation = {
+    x: 0,
+    y: 0,
+    z: 0 
+  }
+
+  function updateMesh(ms){
     rotation = {
       x: Mesh.rotation.x,
       y: Mesh.rotation.y,
       z: Mesh.rotation.z
     }
-    console.log(rotation)
+    let uuid = Mesh.uuid;
     scene.remove(Mesh);
-    renderGear();
     Mesh = new THREE.Mesh(geometry, material);
     Mesh.rotation.set(rotation.x,rotation.y,rotation.z);
-    objects[0] = Mesh;
     scene.add(Mesh);
   }
 
-  scene.add(Mesh);
 
   // Add Frames Display
   let stats = new Stats();
@@ -98,7 +151,6 @@ Zepto(function($){
 
   // Add controls
   let controls = new THREE.OrbitControls(camera, renderer.domElement); // renderer.domElement is required
-  console.log(renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 1.0;
   controls.enableZoom = true;
@@ -112,37 +164,9 @@ Zepto(function($){
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
 
-  // Added: click control
-  function onTouchStart(event){
-    event.preventDefault();
-    event.clientX = event.touches[0].clientX;
-    event.clientY = event.touches[0].clientY;
-    onMouseDown(event); 
-  }
-
-  function onMouseDown(event){
-    event.preventDefault();
-    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects(objects);
-    if(intersects.length > 0){
-      SELECT = intersects[0].object;
-      transControl.attach(Mesh);
-      scene.add(transControl);
-      controls.enabled = false;
-    }else{
-      scene.remove(transControl);
-      transControl.detach(SELECT);
-      controls.enabled = true;
-    }
-  }
-
-  document.addEventListener( 'mousedown', onMouseDown, false );
-  renderer.domElement.addEventListener( 'touchstart', onTouchStart, false );
 
   // Mobile detected
-  function isMobile(){
+  function detectedMobile(){
     var sUserAgent= navigator.userAgent.toLowerCase(),
     bIsIpad= sUserAgent.match(/ipad/i) == "ipad",
     bIsIphoneOs= sUserAgent.match(/iphone os/i) == "iphone os",
@@ -155,6 +179,8 @@ Zepto(function($){
     bIsWebview = sUserAgent.match(/webview/i) == "webview";
     return (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM);
   }
+
+  isMobile = detectedMobile();
 
   // Dat.gui control
   function initGuiControl(){
@@ -196,33 +222,33 @@ Zepto(function($){
         .min(10).max(40).step(1)
         .onChange((value) => {
           gearOption.teeth = value;
-          updateMesh();
-        });
+          updateMesh(Mesh);
+        }).listen();
     gearFolder.add(gearOption, 'modulus')
         .min(2).max(10).step(1)
         .onChange((value) => {
           gearOption.modulus = value;
-          updateMesh();
-        });
+          updateMesh(Mesh);
+        }).listen();
     gearFolder.add(gearOption, 'thinkness')
         .min(0.1).max(25).step(0.1)
         .onChange((value) => {
           gearOption.amount = value;
           gearOption.thinkness = value;
-          updateMesh();
-        });
+          updateMesh(Mesh);
+        }).listen();
     gearFolder.add(gearOption, 'speed')
         .min(0.1).max(96).step(0.1)
         .onChange((value) => {
           gearOption.speed = value;
-          updateMesh();
-        });
+          updateMesh(Mesh);
+        }).listen();
     gearFolder.addColor(gearOption, 'color')
         .onChange((value) => {
           gearOption.color = value;
-          updateMesh();
-        });
-    if(!isMobile()){
+          updateMesh(Mesh);
+        }).listen();
+    if(!isMobile){
       lightFolder.open();
       gearFolder.open();
     }else{
@@ -234,8 +260,10 @@ Zepto(function($){
 
   function updateGearParameters(){
     let l = ['x','y','z'];
-    for(let i in l){
-      $('.position-' + l[i]).text(Mesh.position[l[i]].toFixed(2));
+    if(Mesh!= undefined){
+      for(let i in l){
+        $('.position-' + l[i]).text(Mesh.position[l[i]].toFixed(2));
+      }
     }
   }
 
@@ -248,15 +276,72 @@ Zepto(function($){
     requestAnimationFrame(renderCanvas);
   }
   function draw(){
-    Gear.track();
-    Mesh.rotation.z = rotation.z - Gear.phi;
+    for(let i in Meshes){
+      let go = getGearAndOptFromMesh(Meshes[i]);
+      go.gear.track();
+      Meshes[i].rotation.z = -go.gear.phi;
+    }
     updateGearParameters();
     renderer.render(scene, camera);
   }
+
+  // Get Gear & Option infomation from mesh
+  function getGearAndOptFromMesh(ms){
+    let uuid = ms.uuid;
+    let _gear;
+    let _option;
+    for(let i in Gears){
+      Gears[i].uuid == uuid ? _gear = Gears[i] : '';
+    }
+    for(let i in gearOptions){
+      gearOptions[i].uuid == uuid ? _option = gearOptions[i] : '';
+    }
+    return {
+      gear: _gear,
+      gearOption: _option
+    }
+  }
+
   renderCanvas()
   
-  // Zepto
+  // Dom Events
   $('.toggle-menu').on('click',function(){
     $('#function-panel').hasClass('hide') ? $('#function-panel').removeClass('hide').addClass('show') : $('#function-panel').removeClass('show').addClass('hide');
   });
+
+  $('.add-gear').on('click',function(){
+    addGear();
+  })
+  $('.remove-gear').on('click',function(){
+    removeGear(markedMesh);
+  })
+  // Added: click control
+  function onTouchStart(event){
+    event.preventDefault();
+    event.clientX = event.touches[0].clientX;
+    event.clientY = event.touches[0].clientY;
+    onMouseDown(event); 
+  }
+
+  function onMouseDown(event){
+    event.preventDefault();
+    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    let intersects = raycaster.intersectObjects(Meshes);
+    if(intersects.length > 0){
+      Mesh = intersects[0].object;
+      transControl.attach(Mesh);
+      scene.add(transControl);
+      isMobile ? controls.enabled = false : '';
+      markedMesh = Mesh;
+    }else{
+      scene.remove(transControl);
+      transControl.detach(SELECT);
+      isMobile ? controls.enabled = true : '';
+    }
+  }
+
+  document.addEventListener( 'mousedown', onMouseDown, false );
+  renderer.domElement.addEventListener( 'touchstart', onTouchStart, false );
 })
