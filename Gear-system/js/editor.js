@@ -46,13 +46,13 @@ Zepto(function($){
   scene.add(light);
 
   gearOption = {
-    teeth: 17,
-    modulus: 4,
+    teeth: 0,
+    modulus: 0,
     color: "#3d8ec6",
-    speed: 36,
-    steps: 1,
-    amount: 2,
-    thinkness: 2,
+    speed: 0,
+    steps: 0,
+    amount: 0,
+    thinkness: 0,
     bevelEnabled: false,
   }
 
@@ -71,8 +71,6 @@ Zepto(function($){
       gear: gear
     }
   }
-
-  renderGear();
 
   function addGear(x,y,z){
     let X = x || 30 - Math.random() * 60;
@@ -143,33 +141,35 @@ Zepto(function($){
   }
 
   function updateMesh(ms){
-    rotation = {
-      x: ms.rotation.x,
-      y: ms.rotation.y,
-      z: ms.rotation.z
+    if(ms != undefined){
+      rotation = {
+        x: ms.rotation.x,
+        y: ms.rotation.y,
+        z: ms.rotation.z
+      }
+      let uuid = ms.uuid;
+      let position = Mesh.position;
+      scene.remove(ms);
+      removeItem(Meshes,uuid);
+      let go = getGearAndOptFromMesh(ms);
+      for(let i in gearOption){
+        go.gearOption[i] = gearOption[i];
+      }
+      let _gear = renderGear();
+      let mesh = new THREE.Mesh(_gear.geometry, _gear.material);
+      mesh.position.set(position.x,position.y,position.z);
+      mesh.rotation.set(rotation.x,rotation.y,rotation.z);
+      removeItem(Gears,uuid);
+      removeItem(gearOptions,uuid);
+      _gear.gear.uuid = mesh.uuid;
+      go.gearOption.uuid = mesh.uuid;
+      Meshes.push(mesh);
+      Gears.push(_gear.gear);
+      gearOptions.push(go.gearOption);
+      markedMesh = mesh;
+      Mesh = mesh;
+      scene.add(mesh);
     }
-    let uuid = ms.uuid;
-    let position = Mesh.position;
-    scene.remove(ms);
-    removeItem(Meshes,uuid);
-    let go = getGearAndOptFromMesh(ms);
-    for(let i in gearOption){
-      go.gearOption[i] = gearOption[i];
-    }
-    let _gear = renderGear();
-    let mesh = new THREE.Mesh(_gear.geometry, _gear.material);
-    mesh.position.set(position.x,position.y,position.z);
-    mesh.rotation.set(rotation.x,rotation.y,rotation.z);
-    removeItem(Gears,uuid);
-    removeItem(gearOptions,uuid);
-    _gear.gear.uuid = mesh.uuid;
-    go.gearOption.uuid = mesh.uuid;
-    Meshes.push(mesh);
-    Gears.push(_gear.gear);
-    gearOptions.push(go.gearOption);
-    markedMesh = mesh;
-    Mesh = mesh;
-    scene.add(mesh);
   }
 
   function removeItem(item,uuid){
