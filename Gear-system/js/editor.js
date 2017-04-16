@@ -12,12 +12,13 @@ Zepto(function($){
   let Meshes = [];
   let gearOption = {};
   let gearOptions = [];
-  let material;
-  let geometry;
+  // let material;
+  // let geometry;
   let stopFlag = false;
   let rotation;
   let isMobile = false;
   let markedMesh;
+  let gui;
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -56,19 +57,27 @@ Zepto(function($){
   }
 
   function renderGear(){
-    Gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
-    Gear.angularSpeed = gearOption.speed;
-    geometry = new THREE.ExtrudeGeometry(Gear.getShape(),gearOption);
-    material = new THREE.MeshPhongMaterial({
+    let gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
+    gear.angularSpeed = gearOption.speed;
+    let geometry = new THREE.ExtrudeGeometry(gear.getShape(),gearOption);
+    let material = new THREE.MeshPhongMaterial({
       color: gearOption.color,
       polygonOffset: true,
       polygonOffsetUnits: 4.0
     });
+    return {
+      geometry: geometry,
+      material: material,
+      gear: gear
+    }
   }
 
   renderGear();
 
-  function addGear(){
+  function addGear(x,y,z){
+    let X = x || 30 - Math.random() * 60;
+    let Y = y || 30 - Math.random() * 60;
+    let Z = z || 30 - Math.random() * 60;
     let tempOption = {
       teeth: 17,
       modulus: 4,
@@ -91,7 +100,7 @@ Zepto(function($){
     });
 
     let mesh = new THREE.Mesh(tempGeometry, tempMaterial);
-    mesh.position.set(0,0,0);
+    mesh.position.set(X,Y,Z);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     tempOption.uuid = mesh.uuid;
@@ -101,6 +110,8 @@ Zepto(function($){
     gearOptions.push(tempOption);
     scene.add(mesh);
   }
+
+  addGear(0.5,0.5,0.5);
 
   function removeGear(ms){
     if(ms != undefined){
@@ -133,17 +144,41 @@ Zepto(function($){
 
   function updateMesh(ms){
     rotation = {
-      x: Mesh.rotation.x,
-      y: Mesh.rotation.y,
-      z: Mesh.rotation.z
+      x: ms.rotation.x,
+      y: ms.rotation.y,
+      z: ms.rotation.z
     }
-    let uuid = Mesh.uuid;
-    scene.remove(Mesh);
-    Mesh = new THREE.Mesh(geometry, material);
-    Mesh.rotation.set(rotation.x,rotation.y,rotation.z);
-    scene.add(Mesh);
+    let uuid = ms.uuid;
+    let position = Mesh.position;
+    scene.remove(ms);
+    removeItem(Meshes,uuid);
+    let go = getGearAndOptFromMesh(ms);
+    for(let i in gearOption){
+      go.gearOption[i] = gearOption[i];
+    }
+    let _gear = renderGear();
+    let mesh = new THREE.Mesh(_gear.geometry, _gear.material);
+    mesh.position.set(position.x,position.y,position.z);
+    mesh.rotation.set(rotation.x,rotation.y,rotation.z);
+    removeItem(Gears,uuid);
+    removeItem(gearOptions,uuid);
+    _gear.gear.uuid = mesh.uuid;
+    go.gearOption.uuid = mesh.uuid;
+    Meshes.push(mesh);
+    Gears.push(_gear.gear);
+    gearOptions.push(go.gearOption);
+    markedMesh = mesh;
+    Mesh = mesh;
+    scene.add(mesh);
   }
 
+  function removeItem(item,uuid){
+    for(let i in item){
+      if(item[i].uuid == uuid){
+        item.splice(i,1)
+      }
+    }
+  }
 
   // Add Frames Display
   let stats = new Stats();
@@ -184,7 +219,7 @@ Zepto(function($){
 
   // Dat.gui control
   function initGuiControl(){
-    let gui = new dat.GUI();
+    gui = new dat.GUI();
 
     let lightOption = {
       'Light X': light.position.x,
@@ -279,7 +314,16 @@ Zepto(function($){
     for(let i in Meshes){
       let go = getGearAndOptFromMesh(Meshes[i]);
       go.gear.track();
-      Meshes[i].rotation.z = -go.gear.phi;
+      Meshes[i].rotation.z = - go.gear.phi;
+    }
+    let go = getGearAndOptFromMesh(markedMesh);
+    if(go != undefined){
+      for(let i in go.gearOption){
+        gearOption[i] = go.gearOption[i];
+      }
+      for(let i in gui.__controllers){
+        gui.__controllers[i].updateDisplay();
+      }
     }
     updateGearParameters();
     renderer.render(scene, camera);
@@ -287,18 +331,22 @@ Zepto(function($){
 
   // Get Gear & Option infomation from mesh
   function getGearAndOptFromMesh(ms){
-    let uuid = ms.uuid;
-    let _gear;
-    let _option;
-    for(let i in Gears){
-      Gears[i].uuid == uuid ? _gear = Gears[i] : '';
-    }
-    for(let i in gearOptions){
-      gearOptions[i].uuid == uuid ? _option = gearOptions[i] : '';
-    }
-    return {
-      gear: _gear,
-      gearOption: _option
+    if(ms != undefined){
+      let uuid = ms.uuid;
+      let _gear;
+      let _option;
+      for(let i in Gears){
+        Gears[i].uuid == uuid ? _gear = Gears[i] : '';
+      }
+      for(let i in gearOptions){
+        gearOptions[i].uuid == uuid ? _option = gearOptions[i] : '';
+      }
+      return {
+        gear: _gear,
+        gearOption: _option
+      }
+    }else{
+      return undefined
     }
   }
 
