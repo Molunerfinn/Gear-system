@@ -60,19 +60,19 @@ var GEARS = function () {
 
 
 
-    function maxLegsFromRadius(radius, connectionRadius) {
+    function maxLegsFromRadius(radius, modulus) {
         var diameter = radius * 2 * Math.PI;
-        var legs = diameter / (4 * connectionRadius);
+        var legs = diameter / (4 * modulus);
         return legs;
     }
 
-    function Gear(x, y, connectionRadius, legs, fillStyle, strokeStyle) {
+    function Gear(x, y, modulus, legs, fillStyle, strokeStyle) {
         this.x = x;
         this.y = y;
         this.exact = true;
-        this.connectionRadius = connectionRadius;
+        this.modulus = modulus;
         this.legs = legs;
-        this.diameter = legs * 4 * connectionRadius;
+        this.diameter = legs * 4 * modulus;
         this.radius = this.diameter / (2 * Math.PI);
         this.phi0 = 0;
         this.phi = 0;
@@ -107,7 +107,7 @@ var GEARS = function () {
             var x = this.x + Math.cos(alpha) * this.radius;
             var y = this.y + Math.sin(alpha) * this.radius;
 
-            context.arc(x, y, this.connectionRadius, -Math.PI / 2 + alpha, Math.PI / 2 + alpha, i % 2 == 0);
+            context.arc(x, y, this.modulus, -Math.PI / 2 + alpha, Math.PI / 2 + alpha, i % 2 == 0);
         }
         context.lineCap = 'round';
         context.lineWidth = 1;
@@ -117,7 +117,7 @@ var GEARS = function () {
         context.stroke();
 
         context.beginPath();
-        context.arc(this.x, this.y, this.connectionRadius, 0, 2 * Math.PI, true);
+        context.arc(this.x, this.y, this.modulus, 0, 2 * Math.PI, true);
         context.fillStyle = this.fillStyle;
         context.fill();
         context.strokeStyle = this.strokeStyle
@@ -150,8 +150,8 @@ var GEARS = function () {
         var trg = sign ? to : from;
         var delta = sign ? 0 : Math.PI;
 
-        var x0 = Math.cos(this.phi) * this.radius + this.connectionRadius * Math.cos(delta + src);
-        var y0 = Math.sin(this.phi) * this.radius + this.connectionRadius * Math.sin(delta + src);
+        var x0 = Math.cos(this.phi) * this.radius + this.modulus * Math.cos(delta + src);
+        var y0 = Math.sin(this.phi) * this.radius + this.modulus * Math.sin(delta + src);
 
         this.shape.moveTo(x0, y0);
         for (var i = 0; i < this.legs * 2; i++) {
@@ -159,13 +159,13 @@ var GEARS = function () {
             var x = Math.cos(alpha) * this.radius;
             var y = Math.sin(alpha) * this.radius;
 
-            createArc(this.shape, x, y, this.connectionRadius,
+            createArc(this.shape, x, y, this.modulus,
                 -Math.PI / 2 + alpha, Math.PI / 2 + alpha, i % 2 == 0, 3);
         }
 
         var holePath = new THREE.Path();
-        holePath.moveTo(this.connectionRadius, 0);
-        createArc(holePath, 0, 0, this.connectionRadius, 0, 2 * Math.PI, true, 10);
+        holePath.moveTo(this.modulus, 0);
+        createArc(holePath, 0, 0, this.modulus, 0, 2 * Math.PI, true, 10);
         this.shape.holes.push(holePath);
 
         return this.shape;
@@ -179,8 +179,8 @@ var GEARS = function () {
 
         var newRadius = Math.max(dist - r, 10);
         var newDiam = newRadius * 2 * Math.PI;
-        var newLegs = Math.round(newDiam / (4 * this.connectionRadius));
-        var actualDiameter = newLegs * 4 * this.connectionRadius;
+        var newLegs = Math.round(newDiam / (4 * this.modulus));
+        var actualDiameter = newLegs * 4 * this.modulus;
         var actualRadius = actualDiameter / (2 * Math.PI);
         var actualDist = r + actualRadius;
         var actualX = this.x + Math.cos(alpha) * actualDist;
@@ -191,7 +191,7 @@ var GEARS = function () {
 
         var gearRatio = this.legs / newLegs;
 
-        var newGear = new Gear(actualX, actualY, this.connectionRadius, newLegs, this.fillStyle, this.strokeStyle);
+        var newGear = new Gear(actualX, actualY, this.modulus, newLegs, this.fillStyle, this.strokeStyle);
         newGear.angularSpeed = -this.angularSpeed * gearRatio;
         if (variance > 2) newGear.exact = false;
 
@@ -201,8 +201,8 @@ var GEARS = function () {
         return newGear;
     }
 
-    function GearsLayer(connectionRadius, startLegs, fillStyle, strokeStyle) {
-        this.connectionRadius = connectionRadius;
+    function GearsLayer(modulus, startLegs, fillStyle, strokeStyle) {
+        this.modulus = modulus;
         this.startLegs = startLegs;
         this.gears = [];
         this.fillStyle = fillStyle;
@@ -217,7 +217,7 @@ var GEARS = function () {
         this.gears.forEach(function (gear) {
             var dist = distance(gear.x, gear.y, newGear.x, newGear.y);
 
-            if (dist < gear.radius + newGear.radius + 2 * that.connectionRadius + 5 && neighbor != gear) {
+            if (dist < gear.radius + newGear.radius + 2 * that.modulus + 5 && neighbor != gear) {
                 result = true;
             }
         });
@@ -260,7 +260,7 @@ var GEARS = function () {
 
     GearsLayer.prototype.tryAdd = function tryAdd(x, y, maxR) {
         if (this.gears.length == 0) {
-            var newGear = new Gear(x, y, this.connectionRadius, this.startLegs, this.fillStyle, this.strokeStyle);
+            var newGear = new Gear(x, y, this.modulus, this.startLegs, this.fillStyle, this.strokeStyle);
             newGear.angularSpeed = 360 / newGear.legs;
 
             this.gears.push(newGear);
@@ -292,7 +292,7 @@ var GEARS = function () {
 
     GearsLayer.prototype.tryAddFromLayer = function tryAddFromLayer(x, y, legs, angularSpeed) {
         // Create new gear with given parameters
-        var newGear = new Gear(x, y, this.connectionRadius, legs, this.fillStyle, this.strokeStyle);
+        var newGear = new Gear(x, y, this.modulus, legs, this.fillStyle, this.strokeStyle);
 
         var rSpeed = angularSpeed * newGear.radius;
 
@@ -316,7 +316,7 @@ GearsLayer.prototype.addFromLayer = function addFromLayer(layers, options, maxR)
 
         // Choose the new number of cogs at random:
         var legs = options.minLegs + Math.floor((options.generator.random() *
-            (maxLegsFromRadius(maxR, this.connectionRadius) - options.minLegs)));
+            (maxLegsFromRadius(maxR, this.modulus) - options.minLegs)));
 
         // Try to add the result to the current layer
         this.tryAddFromLayer(gear.x, gear.y, legs, gear.angularSpeed);
@@ -336,7 +336,7 @@ GearsLayer.prototype.addFromLayer = function addFromLayer(layers, options, maxR)
         this.minY = 0;
         this.maxX = 700;
         this.maxY = 600;
-        this.connectionRadius = 10;
+        this.modulus = 10;
         this.minLegs = 4;
         this.firstGearLegs = 10;
        
@@ -356,7 +356,7 @@ GearsLayer.prototype.addFromLayer = function addFromLayer(layers, options, maxR)
             var clr = nearColor.interpolate(farColor, t);
             var borderClr = clr.add(new Color(0.3, 0.3, 0.3));
 
-            var layer = new GearsLayer(this.connectionRadius,
+            var layer = new GearsLayer(this.modulus,
                 this.firstGearLegs, clr, borderClr);
 
             if (layers.length > 0) {

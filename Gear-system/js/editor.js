@@ -12,13 +12,15 @@ Zepto(function($){
   let Meshes = [];
   let gearOption = {};
   let gearOptions = [];
-  // let material;
-  // let geometry;
   let stopFlag = false;
   let rotation;
   let isMobile = false;
   let markedMesh;
   let gui;
+
+  // Add Frames Display
+  let stats = new Stats();
+  document.body.appendChild(stats.dom);
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -45,6 +47,7 @@ Zepto(function($){
 
   scene.add(light);
 
+  // init gearOption
   gearOption = {
     teeth: 0,
     modulus: 0,
@@ -56,6 +59,7 @@ Zepto(function($){
     bevelEnabled: false,
   }
 
+  // render functions
   function renderGear(){
     let gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
     gear.angularSpeed = gearOption.speed;
@@ -134,6 +138,7 @@ Zepto(function($){
     }
   }
 
+  // init rotation
   rotation = {
     x: 0,
     y: 0,
@@ -172,18 +177,6 @@ Zepto(function($){
     }
   }
 
-  function removeItem(item,uuid){
-    for(let i in item){
-      if(item[i].uuid == uuid){
-        item.splice(i,1)
-      }
-    }
-  }
-
-  // Add Frames Display
-  let stats = new Stats();
-  document.body.appendChild(stats.dom);
-
   // Add controls
   let controls = new THREE.OrbitControls(camera, renderer.domElement); // renderer.domElement is required
   controls.enableDamping = true;
@@ -195,27 +188,8 @@ Zepto(function($){
   let transControl = new THREE.TransformControls(camera, renderer.domElement);
   transControl.addEventListener('change', draw);
 
-
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
-
-
-  // Mobile detected
-  function detectedMobile(){
-    var sUserAgent= navigator.userAgent.toLowerCase(),
-    bIsIpad= sUserAgent.match(/ipad/i) == "ipad",
-    bIsIphoneOs= sUserAgent.match(/iphone os/i) == "iphone os",
-    bIsMidp= sUserAgent.match(/midp/i) == "midp",
-    bIsUc7= sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4",
-    bIsUc= sUserAgent.match(/ucweb/i) == "ucweb",
-    bIsAndroid= sUserAgent.match(/android/i) == "android",
-    bIsCE= sUserAgent.match(/windows ce/i) == "windows ce",
-    bIsWM= sUserAgent.match(/windows mobile/i) == "windows mobile",
-    bIsWebview = sUserAgent.match(/webview/i) == "webview";
-    return (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM);
-  }
-
-  isMobile = detectedMobile();
 
   // Dat.gui control
   function initGuiControl(){
@@ -234,7 +208,6 @@ Zepto(function($){
         .min(0).max(200)
         .onChange((value) => {
             light.position.x = value;
-
         });
     lightFolder.add(lightOption, 'Light Y')
         .min(0).max(200)
@@ -249,7 +222,6 @@ Zepto(function($){
     lightFolder.add(lightOption, 'Camera Helper')
         .onChange((value) => {
           value == true ? scene.add(helper) : scene.remove(helper);
-          value == true ? Gear.angularSpeed = 0 : Gear.angularSpeed = 36;
           value == true ? stopFlag = true : stopFlag = false;
         });
     let gearFolder = gui.addFolder('Gear');
@@ -293,15 +265,6 @@ Zepto(function($){
 
   initGuiControl();
 
-  function updateGearParameters(){
-    let l = ['x','y','z'];
-    if(Mesh!= undefined){
-      for(let i in l){
-        $('.position-' + l[i]).text(Mesh.position[l[i]].toFixed(2));
-      }
-    }
-  }
-
   // Render whole scene
   function renderCanvas(){
     stats.begin();
@@ -329,6 +292,24 @@ Zepto(function($){
     renderer.render(scene, camera);
   }
 
+  renderCanvas()
+
+  // Helper functions
+  // Mobile detected
+  function detectedMobile(){
+    var sUserAgent= navigator.userAgent.toLowerCase(),
+    bIsIpad= sUserAgent.match(/ipad/i) == "ipad",
+    bIsIphoneOs= sUserAgent.match(/iphone os/i) == "iphone os",
+    bIsMidp= sUserAgent.match(/midp/i) == "midp",
+    bIsUc7= sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4",
+    bIsUc= sUserAgent.match(/ucweb/i) == "ucweb",
+    bIsAndroid= sUserAgent.match(/android/i) == "android",
+    bIsCE= sUserAgent.match(/windows ce/i) == "windows ce",
+    bIsWM= sUserAgent.match(/windows mobile/i) == "windows mobile",
+    bIsWebview = sUserAgent.match(/webview/i) == "webview";
+    return (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM);
+  }
+  isMobile = detectedMobile();
   // Get Gear & Option infomation from mesh
   function getGearAndOptFromMesh(ms){
     if(ms != undefined){
@@ -350,7 +331,23 @@ Zepto(function($){
     }
   }
 
-  renderCanvas()
+  function removeItem(item,uuid){
+    for(let i in item){
+      if(item[i].uuid == uuid){
+        item.splice(i,1)
+      }
+    }
+  }
+
+  function updateGearParameters(){
+    let l = ['x','y','z'];
+    if(Mesh!= undefined){
+      for(let i in l){
+        $('.position-' + l[i]).text(Mesh.position[l[i]].toFixed(2));
+      }
+    }
+  }
+
   
   // Dom Events
   $('.toggle-menu').on('click',function(){
