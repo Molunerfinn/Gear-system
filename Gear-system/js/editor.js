@@ -138,6 +138,25 @@ Zepto(function($){
     }
   }
 
+  function addModel(){
+    let fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.addEventListener('change', function(e){
+      let file = fileInput.files[0];
+      let filename = file.name;
+      let reader = new FileReader();
+      reader.addEventListener('load', function(e){
+        let contents = e.target.result;
+        let obj = new THREE.OBJLoader().parse(contents);
+        obj.name = filename;
+        // Meshes.push(obj);
+        scene.add(obj);
+      })
+      reader.readAsText( file );
+    })
+    fileInput.click();
+  }
+
   // init rotation
   rotation = {
     x: 0,
@@ -360,6 +379,15 @@ Zepto(function($){
   $('.remove-gear').on('click',function(){
     removeGear(markedMesh);
   })
+
+  $('.add-model').on('click',function(){
+    addModel();
+  })
+
+  $('.remove-model').on('click', function(){
+
+  })
+
   // Added: click control
   function onTouchStart(event){
     event.preventDefault();
