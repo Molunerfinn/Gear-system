@@ -34,7 +34,7 @@ Zepto(function($){
   let scene = new THREE.Scene();
   let camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 10, 10000);
   camera.position.set(80,80,80);
-  let gridHelper = new THREE.GridHelper(100,50, 0x0000ff, 0x808080);
+  let gridHelper = new THREE.GridHelper(1000,50, 0x0000ff, 0x808080);
   gridHelper.position.set(0,0,0);
   scene.add(gridHelper);
 
@@ -42,7 +42,7 @@ Zepto(function($){
   light.position.set(0,30,30);
 
   light.castShadow = true;
-  light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(45,1,10,80))
+  light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(45,1,100,800))
   let helper = new THREE.CameraHelper( light.shadow.camera );
 
   scene.add(light);
@@ -61,7 +61,7 @@ Zepto(function($){
 
   // render functions
   function renderGear(){
-    let gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
+    let gear = new GEARS.Gear(0,0,gearOption.modulus, gearOption.teeth,gearOption.color,gearOption.color); 
     gear.angularSpeed = gearOption.speed;
     let geometry = new THREE.ExtrudeGeometry(gear.getShape(),gearOption);
     let material = new THREE.MeshPhongMaterial({
@@ -107,6 +107,7 @@ Zepto(function($){
     mesh.receiveShadow = true;
     tempOption.uuid = mesh.uuid;
     gear.uuid = mesh.uuid;
+    mesh.userData = 'gear'
     Meshes.push(mesh);
     Gears.push(gear);
     gearOptions.push(tempOption);
@@ -149,7 +150,11 @@ Zepto(function($){
         let contents = e.target.result;
         let obj = new THREE.OBJLoader().parse(contents);
         obj.name = filename;
-        // Meshes.push(obj);
+        for(let i = 0; i < obj.children.length; i++){
+          console.log(obj.children[i])
+          Meshes.push(obj.children[i])
+        }
+        obj.scale.set(0.2,0.2,0.2)
         scene.add(obj);
       })
       reader.readAsText( file );
@@ -187,6 +192,7 @@ Zepto(function($){
       removeItem(gearOptions,uuid);
       _gear.gear.uuid = mesh.uuid;
       go.gearOption.uuid = mesh.uuid;
+      mesh.userData = 'gear';
       Meshes.push(mesh);
       Gears.push(_gear.gear);
       gearOptions.push(go.gearOption);
@@ -224,17 +230,17 @@ Zepto(function($){
     // light folder
     let lightFolder = gui.addFolder('Light');
     lightFolder.add(lightOption, 'Light X')
-        .min(0).max(200)
+        .min(0).max(2000)
         .onChange((value) => {
             light.position.x = value;
         });
     lightFolder.add(lightOption, 'Light Y')
-        .min(0).max(200)
+        .min(0).max(2000)
         .onChange((value) => {
             light.position.y = value;
         });
     lightFolder.add(lightOption, 'Light Z')
-        .min(0).max(200)
+        .min(0).max(2000)
         .onChange((value) => {
             light.position.z = value;
         });
@@ -294,9 +300,11 @@ Zepto(function($){
   }
   function draw(){
     for(let i in Meshes){
-      let go = getGearAndOptFromMesh(Meshes[i]);
-      go.gear.track();
-      Meshes[i].rotation.z = - go.gear.phi;
+      if(Meshes[i].userData == 'gear'){
+        let go = getGearAndOptFromMesh(Meshes[i]);
+        go.gear.track();
+        Meshes[i].rotation.z = - go.gear.phi;
+      }
     }
     let go = getGearAndOptFromMesh(markedMesh);
     if(go != undefined){
@@ -331,7 +339,7 @@ Zepto(function($){
   isMobile = detectedMobile();
   // Get Gear & Option infomation from mesh
   function getGearAndOptFromMesh(ms){
-    if(ms != undefined){
+    if(ms != undefined && ms.userData == 'gear'){
       let uuid = ms.uuid;
       let _gear;
       let _option;
@@ -404,6 +412,7 @@ Zepto(function($){
     let intersects = raycaster.intersectObjects(Meshes);
     if(intersects.length > 0){
       Mesh = intersects[0].object;
+      console.log(Mesh)
       transControl.attach(Mesh);
       scene.add(transControl);
       isMobile ? controls.enabled = false : '';
