@@ -23,7 +23,7 @@ body{
 
 #function-panel{
   width: 133px;
-  height: 250px;
+  height: 280px;
   background: #ddd;
   position: absolute;
   top: 200px;
@@ -77,7 +77,7 @@ body{
 
 .toggle-menu:before{
   content: '';
-  height: 250px;
+  height: 280px;
   width: 1px;
   background: #858585;
   position: absolute;
