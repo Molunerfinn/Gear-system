@@ -1,41 +1,41 @@
 Zepto(function($){
 
-  let raycaster;
-  let mouse;
-  let SELECT;
-  let objects = [];
-  let canvas = document.getElementById('gear-system');
-  let light;
-  let Gear;
-  let Gears = [];
-  let Mesh;
-  let Meshes = [];
-  let gearOption = {};
-  let gearOptions = [];
-  let stopFlag = false;
-  let rotation;
-  let isMobile = false;
-  let markedMesh;
-  let gui;
-  let boxes = [];
+  var raycaster;
+  var mouse;
+  var SELECT;
+  var objects = [];
+  var canvas = document.getElementById('gear-system');
+  var light;
+  var Gear;
+  var Gears = [];
+  var Mesh;
+  var Meshes = [];
+  var gearOption = {};
+  var gearOptions = [];
+  var stopFlag = false;
+  var rotation;
+  var isMobile = false;
+  var markedMesh;
+  var gui;
+  var boxes = [];
 
   // Add Frames Display
-  let stats = new Stats();
+  var stats = new Stats();
   document.body.appendChild(stats.dom);
 
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  let renderer = new THREE.WebGLRenderer({
+  var renderer = new THREE.WebGLRenderer({
     canvas: canvas,
     antialias: true
   });
   renderer.shadowMap.enabled = true; // for shadow & camera helper
   renderer.shadowMap.soft = true;
   renderer.setClearColor(0xeeeeee);
-  let scene = new THREE.Scene();
-  let camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 10, 10000);
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 10, 10000);
   camera.position.set(150,150,150);
-  let gridHelper = new THREE.GridHelper(1000,50, 0x0000ff, 0x808080);
+  var gridHelper = new THREE.GridHelper(1000,50, 0x0000ff, 0x808080);
   gridHelper.position.set(0,0,0);
   scene.add(gridHelper);
 
@@ -44,7 +44,7 @@ Zepto(function($){
 
   light.castShadow = true;
   light.shadow = new THREE.LightShadow(new THREE.PerspectiveCamera(45,1,100,800))
-  let helper = new THREE.CameraHelper( light.shadow.camera );
+  var helper = new THREE.CameraHelper( light.shadow.camera );
 
   scene.add(light);
 
@@ -62,10 +62,10 @@ Zepto(function($){
 
   // render functions
   function renderGear(){
-    let gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
+    var gear = new GEARS.Gear(0,0,gearOption.modulus / 4, gearOption.teeth,gearOption.color,gearOption.color); 
     gear.angularSpeed = gearOption.speed;
-    let geometry = new THREE.ExtrudeGeometry(gear.getShape(),gearOption);
-    let material = new THREE.MeshPhongMaterial({
+    var geometry = new THREE.ExtrudeGeometry(gear.getShape(),gearOption);
+    var material = new THREE.MeshPhongMaterial({
       color: gearOption.color,
       polygonOffset: true,
       polygonOffsetUnits: 4.0
@@ -78,10 +78,10 @@ Zepto(function($){
   }
 
   function addGear(x,y,z){
-    let X = x || 150 - Math.random() * 300;
-    let Y = y || 150 - Math.random() * 300;
-    let Z = z || 150 - Math.random() * 300;
-    let tempOption = {
+    var X = x || 150 - Math.random() * 300;
+    var Y = y || 150 - Math.random() * 300;
+    var Z = z || 150 - Math.random() * 300;
+    var tempOption = {
       teeth: 17,
       modulus: 4,
       color: "#3d8ec6",
@@ -92,17 +92,17 @@ Zepto(function($){
       bevelEnabled: false,
       uuid: ''
     }
-    let gear = new GEARS.Gear(0,0,tempOption.modulus / 4, tempOption.teeth,tempOption.color,tempOption.color); 
+    var gear = new GEARS.Gear(0,0,tempOption.modulus / 4, tempOption.teeth,tempOption.color,tempOption.color); 
     gear.angularSpeed = tempOption.speed;
 
-    let tempGeometry = new THREE.ExtrudeGeometry(gear.getShape(),tempOption);
-    let tempMaterial = new THREE.MeshPhongMaterial({
+    var tempGeometry = new THREE.ExtrudeGeometry(gear.getShape(),tempOption);
+    var tempMaterial = new THREE.MeshPhongMaterial({
       color: tempOption.color,
       polygonOffset: true,
       polygonOffsetUnits: 4.0
     });
 
-    let mesh = new THREE.Mesh(tempGeometry, tempMaterial);
+    var mesh = new THREE.Mesh(tempGeometry, tempMaterial);
     mesh.position.set(X,Y,Z);
     mesh.scale.set(5,5,5)
     mesh.castShadow = true;
@@ -121,18 +121,18 @@ Zepto(function($){
   function removeGear(ms){
     if(ms != undefined){
       scene.remove(ms);
-      let uuid = ms.uuid;
-      for(let i in Meshes){
+      var uuid = ms.uuid;
+      for(var i in Meshes){
         if(Meshes[i].uuid == uuid){
           Meshes.splice(i,1)
         }
       }
-      for(let i in Gears){
+      for(var i in Gears){
         if(Gears[i].uuid == uuid){
           Gears.splice(i,1)
         }
       }
-      for(let i in gearOptions){
+      for(var i in gearOptions){
         if(gearOptions[i].uuid == uuid){
           gearOptions.splice(i,1)
         }
@@ -141,7 +141,7 @@ Zepto(function($){
     }
   }
 
-  let modelOption = {
+  var modelOption = {
     x: 0,
     y: 0,
     z: 0,
@@ -152,17 +152,17 @@ Zepto(function($){
   }
 
   function addModel(){
-    let fileInput = document.createElement('input');
+    var fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.addEventListener('change', function(e){
-      let file = fileInput.files[0];
-      let filename = file.name;
-      let reader = new FileReader();
+      var file = fileInput.files[0];
+      var filename = file.name;
+      var reader = new FileReader();
       reader.addEventListener('load', function(e){
-        let contents = e.target.result;
-        let obj = new THREE.OBJLoader().parse(contents);
+        var contents = e.target.result;
+        var obj = new THREE.OBJLoader().parse(contents);
         obj.name = filename;
-        for(let i = 0; i < obj.children.length; i++){
+        for(var i = 0; i < obj.children.length; i++){
           Meshes.push(obj.children[i])
         }
         obj.scale.set(0.2,0.2,0.2)
@@ -176,7 +176,7 @@ Zepto(function($){
   function removeModel(){
     if(Mesh != undefined && Mesh.parent != undefined && Mesh.userData != "gear"){
       scene.remove(Mesh.parent);
-      for(let i in Meshes){
+      for(var i in Meshes){
         if(Meshes[i].parent != undefined && Mesh[i].userData != "gear"){
           Meshes.slice(i,1);
         }
@@ -186,14 +186,14 @@ Zepto(function($){
 
   function removeModelItem(){
     if(Mesh != undefined && Mesh.parent != undefined && Mesh.userData != "gear"){
-      let uuid = Mesh.uuid;
-      // for(let i in Mesh.parent.children){
+      var uuid = Mesh.uuid;
+      // for(var i in Mesh.parent.children){
       //   Mesh.parent.children[i].uuid == Mesh.uuid;
       //   Mesh.parent.remove(Mesh.parent.children[i]);
       // }
       Mesh.parent.remove(Mesh);
       scene.remove(Mesh);
-      for(let i in Meshes){
+      for(var i in Meshes){
         if(Meshes[i].uuid == uuid){
           Meshes.slice(i,1);
         }
@@ -215,17 +215,17 @@ Zepto(function($){
         y: ms.rotation.y,
         z: ms.rotation.z
       }
-      let uuid = ms.uuid;
-      let position = Mesh.position;
+      var uuid = ms.uuid;
+      var position = Mesh.position;
       scene.remove(ms);
       removeItem(Meshes,uuid);
-      let go = getGearAndOptFromMesh(ms);
+      var go = getGearAndOptFromMesh(ms);
       if(go.gear != undefined || go.gearOption != undefined){
-        for(let i in gearOption){
+        for(var i in gearOption){
           go.gearOption[i] = gearOption[i];
         }
-        let _gear = renderGear();
-        let mesh = new THREE.Mesh(_gear.geometry, _gear.material);
+        var _gear = renderGear();
+        var mesh = new THREE.Mesh(_gear.geometry, _gear.material);
         mesh.position.set(position.x,position.y,position.z);
         mesh.rotation.set(rotation.x,rotation.y,rotation.z);
         mesh.scale.set(5,5,5);
@@ -251,14 +251,14 @@ Zepto(function($){
   }
 
   // Add controls
-  let controls = new THREE.OrbitControls(camera, renderer.domElement); // renderer.domElement is required
+  var controls = new THREE.OrbitControls(camera, renderer.domElement); // renderer.domElement is required
   controls.enableDamping = true;
   controls.dampingFactor = 1.0;
   controls.enableZoom = true;
   controls.addEventListener( 'change', draw );
   controls.addEventListener( 'change', draw );
 
-  let transControl = new THREE.TransformControls(camera, renderer.domElement);
+  var transControl = new THREE.TransformControls(camera, renderer.domElement);
   transControl.addEventListener('change', draw);
 
   raycaster = new THREE.Raycaster();
@@ -268,7 +268,7 @@ Zepto(function($){
   function initGuiControl(){
     gui = new dat.GUI();
 
-    let lightOption = {
+    var lightOption = {
       'Light X': light.position.x,
       'Light Y': light.position.y,
       'Light Z': light.position.x,
@@ -276,92 +276,92 @@ Zepto(function($){
     }
 
     // light folder
-    let lightFolder = gui.addFolder('Light');
+    var lightFolder = gui.addFolder('Light');
     lightFolder.add(lightOption, 'Light X')
         .min(0).max(2000)
-        .onChange((value) => {
+        .onChange(function(value){
             light.position.x = value;
         });
     lightFolder.add(lightOption, 'Light Y')
         .min(0).max(2000)
-        .onChange((value) => {
+        .onChange(function(value){
             light.position.y = value;
         });
     lightFolder.add(lightOption, 'Light Z')
         .min(0).max(2000)
-        .onChange((value) => {
+        .onChange(function(value){
             light.position.z = value;
         });
     lightFolder.add(lightOption, 'Camera Helper')
-        .onChange((value) => {
+        .onChange(function(value){
           value == true ? scene.add(helper) : scene.remove(helper);
           value == true ? stopFlag = true : stopFlag = false;
         });
-    let gearFolder = gui.addFolder('Gear');
+    var gearFolder = gui.addFolder('Gear');
     gearFolder.add(gearOption, 'teeth')
         .min(10).max(40).step(1)
-        .onChange((value) => {
+        .onChange(function(value){
           gearOption.teeth = value;
           updateMesh(Mesh);
         }).listen();
     gearFolder.add(gearOption, 'modulus')
         .min(2).max(10).step(1)
-        .onChange((value) => {
+        .onChange(function(value){
           gearOption.modulus = value;
           updateMesh(Mesh);
         }).listen();
     gearFolder.add(gearOption, 'thinkness')
         .min(0.1).max(25).step(0.1)
-        .onChange((value) => {
+        .onChange(function(value){
           gearOption.amount = value;
           gearOption.thinkness = value;
           updateMesh(Mesh);
         }).listen();
     gearFolder.add(gearOption, 'speed')
         .min(0.1).max(96).step(0.1)
-        .onChange((value) => {
+        .onChange(function(value){
           gearOption.speed = value;
           updateMesh(Mesh);
         }).listen();
     gearFolder.addColor(gearOption, 'color')
-        .onChange((value) => {
+        .onChange(function(value){
           gearOption.color = value;
           updateMesh(Mesh);
         }).listen();
-    let modelFolder = gui.addFolder('Model');
+    var modelFolder = gui.addFolder('Model');
     modelFolder.add(modelOption, 'x')
       .min(-500).max(500).step(0.5)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'x');
       }).listen();
     modelFolder.add(modelOption, 'y')
       .min(-500).max(500).step(0.5)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'y');
       }).listen();
     modelFolder.add(modelOption, 'z')
       .min(-500).max(500).step(0.5)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'z');
       }).listen();
     modelFolder.add(modelOption, 'scale')
       .min(0.1).max(1.5).step(0.1)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'scale');
       }).listen();
     modelFolder.add(modelOption, 'rotationx')
       .min(-Math.PI).max(Math.PI).step(0.1)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'rotationx');
       }).listen();
     modelFolder.add(modelOption, 'rotationy')
       .min(-Math.PI).max(Math.PI).step(0.1)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'rotationy');
       }).listen();
     modelFolder.add(modelOption, 'rotationz')
       .min(-Math.PI).max(Math.PI).step(0.1)
-      .onChange((value) => {
+      .onChange(function(value){
         updateModel(Mesh,'rotationz');
       }).listen();
     if(!isMobile){
@@ -381,25 +381,25 @@ Zepto(function($){
     draw();
     stats.end();
     controls.update();
-    for(let i in boxes){
+    for(var i in boxes){
       boxes[i].setFromObject(Mesh);
     }
     requestAnimationFrame(renderCanvas);
   }
   function draw(){
-    for(let i in Meshes){
+    for(var i in Meshes){
       if(Meshes[i].userData == 'gear'){
-        let go = getGearAndOptFromMesh(Meshes[i]);
+        var go = getGearAndOptFromMesh(Meshes[i]);
         go.gear.track();
         Meshes[i].rotation.z = - go.gear.phi;
       }
     }
-    let go = getGearAndOptFromMesh(markedMesh);
+    var go = getGearAndOptFromMesh(markedMesh);
     if(go != undefined){
-      for(let i in go.gearOption){
+      for(var i in go.gearOption){
         gearOption[i] = go.gearOption[i];
       }
-      for(let i in gui.__controllers){
+      for(var i in gui.__controllers){
         gui.__controllers[i].updateDisplay();
       }
     }
@@ -428,13 +428,13 @@ Zepto(function($){
   // Get Gear & Option infomation from mesh
   function getGearAndOptFromMesh(ms){
     if(ms != undefined && ms.userData == 'gear'){
-      let uuid = ms.uuid;
-      let _gear;
-      let _option;
-      for(let i in Gears){
+      var uuid = ms.uuid;
+      var _gear;
+      var _option;
+      for(var i in Gears){
         Gears[i].uuid == uuid ? _gear = Gears[i] : '';
       }
-      for(let i in gearOptions){
+      for(var i in gearOptions){
         gearOptions[i].uuid == uuid ? _option = gearOptions[i] : '';
       }
       return {
@@ -447,7 +447,7 @@ Zepto(function($){
   }
 
   function removeItem(item,uuid){
-    for(let i in item){
+    for(var i in item){
       if(item[i].uuid == uuid){
         item.splice(i,1)
       }
@@ -455,9 +455,9 @@ Zepto(function($){
   }
 
   function updateGearParameters(){
-    let l = ['x','y','z'];
+    var l = ['x','y','z'];
     if(Mesh!= undefined){
-      for(let i in l){
+      for(var i in l){
         $('.position-' + l[i]).text(Mesh.position[l[i]].toFixed(2));
       }
     }
@@ -501,11 +501,11 @@ Zepto(function($){
     mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
     mouse.y =  - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects(Meshes);
+    var intersects = raycaster.intersectObjects(Meshes);
     if(intersects.length > 0){
       Mesh = intersects[0].object;
       transControl.attach(Mesh);
-      let box = new THREE.BoxHelper(Mesh, '#3d8ec6');
+      var box = new THREE.BoxHelper(Mesh, '#3d8ec6');
       boxes.push(box);
       scene.add(transControl);
       scene.add(box);
