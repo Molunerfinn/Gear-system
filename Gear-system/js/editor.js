@@ -152,25 +152,38 @@ Zepto(function($){
   }
 
   function addModel(){
-    var fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.addEventListener('change', function(e){
-      var file = fileInput.files[0];
-      var filename = file.name;
-      var reader = new FileReader();
-      reader.addEventListener('load', function(e){
-        var contents = e.target.result;
-        var obj = new THREE.OBJLoader().parse(contents);
-        obj.name = filename;
+    if(isMobile){
+      var objLoader = new THREE.OBJLoader();
+      objLoader.setPath('../model/');
+      objLoader.load('file.obj', function(obj){
+        obj.name = 'file.obj';
         for(var i = 0; i < obj.children.length; i++){
           Meshes.push(obj.children[i])
         }
         obj.scale.set(0.2,0.2,0.2)
         scene.add(obj);
       })
-      reader.readAsText( file );
-    })
-    fileInput.click();
+    }else{
+      var fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.addEventListener('change', function(e){
+        var file = fileInput.files[0];
+        var filename = file.name;
+        var reader = new FileReader();
+        reader.addEventListener('load', function(e){
+          var contents = e.target.result;
+          var obj = new THREE.OBJLoader().parse(contents);
+          obj.name = filename;
+          for(var i = 0; i < obj.children.length; i++){
+            Meshes.push(obj.children[i])
+          }
+          obj.scale.set(0.2,0.2,0.2)
+          scene.add(obj);
+        })
+        reader.readAsText( file );
+      })
+      fileInput.click();
+    }
   }
 
   function removeModel(){
@@ -187,10 +200,6 @@ Zepto(function($){
   function removeModelItem(){
     if(Mesh != undefined && Mesh.parent != undefined && Mesh.userData != "gear"){
       var uuid = Mesh.uuid;
-      // for(var i in Mesh.parent.children){
-      //   Mesh.parent.children[i].uuid == Mesh.uuid;
-      //   Mesh.parent.remove(Mesh.parent.children[i]);
-      // }
       Mesh.parent.remove(Mesh);
       scene.remove(Mesh);
       for(var i in Meshes){
@@ -255,7 +264,6 @@ Zepto(function($){
   controls.enableDamping = true;
   controls.dampingFactor = 1.0;
   controls.enableZoom = true;
-  controls.addEventListener( 'change', draw );
   controls.addEventListener( 'change', draw );
 
   var transControl = new THREE.TransformControls(camera, renderer.domElement);
@@ -364,7 +372,9 @@ Zepto(function($){
       .onChange(function(value){
         updateModel(Mesh,'rotationz');
       }).listen();
+    isMobile = detectedMobile();
     if(!isMobile){
+      console.log('not mobile');
       lightFolder.open();
       gearFolder.open();
       modelFolder.open();
@@ -424,7 +434,6 @@ Zepto(function($){
     bIsWebview = sUserAgent.match(/webview/i) == "webview";
     return (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM);
   }
-  isMobile = detectedMobile();
   // Get Gear & Option infomation from mesh
   function getGearAndOptFromMesh(ms){
     if(ms != undefined && ms.userData == 'gear'){
